@@ -7,12 +7,14 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 // Converter handles converting WAV files to FLAC
 type Converter struct {
 	ffmpegPath string
 	debug      bool
+	maxWorkers int
 }
 
 // NewConverter creates a new FLAC converter
@@ -23,10 +25,31 @@ func NewConverter(debug bool) (*Converter, error) {
 		return nil, err
 	}
 
+	// Determine the number of workers based on available CPU cores
+	// Use 75% of available cores (minimum 2, maximum 12)
+	numCPU := runtime.NumCPU()
+	maxWorkers := max(2, min(numCPU*3/4, 12))
+
 	return &Converter{
 		ffmpegPath: ffmpegPath,
 		debug:      debug,
+		maxWorkers: maxWorkers,
 	}, nil
+}
+
+// Helper functions for min/max operations
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // findFFmpeg locates the ffmpeg binary on the system
@@ -124,44 +147,93 @@ func (c *Converter) ConvertToFlac(wavFile string) error {
 	return nil
 }
 
-// ConvertDirectory converts all WAV files in a directory to FLAC
+// ConvertDirectory converts all WAV files in a directory to FLAC using multiple workers
 func (c *Converter) ConvertDirectory(dir string) error {
-	// Find all WAV files in the directory
-	wavFiles, err := filepath.Glob(filepath.Join(dir, "*.wav"))
+	// Find all WAV files in the directory and subdirectories
+	var wavFiles []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.ToLower(filepath.Ext(path)) == ".wav" {
+			wavFiles = append(wavFiles, path)
+		}
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf("error finding WAV files: %w", err)
 	}
 
-	// Convert each WAV file to FLAC
-	for _, wavFile := range wavFiles {
-		if c.debug {
-			fmt.Printf("Converting %s to FLAC\n", wavFile)
-		}
-
-		err := c.ConvertToFlac(wavFile)
-		if err != nil {
-			fmt.Printf("Error converting %s: %v\n", wavFile, err)
-			// Continue with other files even if one fails
-			continue
-		}
+	if len(wavFiles) == 0 {
+		// No WAV files found
+		return nil
 	}
 
-	// Process subdirectories
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("error reading directory: %w", err)
+	// Create a channel to send jobs to workers
+	jobs := make(chan string, len(wavFiles))
+
+	// Create a channel to receive results
+	results := make(chan error, len(wavFiles))
+
+	// Create a wait group to wait for all workers to finish
+	var wg sync.WaitGroup
+
+	// Determine number of workers
+	numWorkers := min(c.maxWorkers, len(wavFiles))
+
+	// Print info about parallelization
+	if c.debug {
+		fmt.Printf("Converting %d WAV files to FLAC using %d parallel workers\n",
+			len(wavFiles), numWorkers)
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
-			subdir := filepath.Join(dir, entry.Name())
-			err := c.ConvertDirectory(subdir)
-			if err != nil {
-				fmt.Printf("Error processing subdirectory %s: %v\n", subdir, err)
-				// Continue with other directories even if one fails
-				continue
+	// Start workers
+	for w := 1; w <= numWorkers; w++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+
+			// Process jobs until the channel is closed
+			for wavFile := range jobs {
+				if c.debug {
+					fmt.Printf("Worker %d: Converting %s to FLAC\n", id, wavFile)
+				}
+
+				err := c.ConvertToFlac(wavFile)
+				results <- err
+
+				if err != nil {
+					if c.debug {
+						fmt.Printf("Worker %d: Error converting %s: %v\n", id, wavFile, err)
+					}
+				} else if c.debug {
+					fmt.Printf("Worker %d: Successfully converted %s\n", id, wavFile)
+				}
 			}
+		}(w)
+	}
+
+	// Send jobs to workers
+	for _, wavFile := range wavFiles {
+		jobs <- wavFile
+	}
+	close(jobs)
+
+	// Wait for all workers to finish
+	wg.Wait()
+	close(results)
+
+	// Collect errors
+	var errorCount int
+	for err := range results {
+		if err != nil {
+			errorCount++
 		}
+	}
+
+	if errorCount > 0 {
+		return fmt.Errorf("%d files failed to convert", errorCount)
 	}
 
 	return nil
