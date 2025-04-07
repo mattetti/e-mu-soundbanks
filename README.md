@@ -12,6 +12,7 @@ The [E-mu Emulator X](https://en.wikipedia.org/wiki/E-mu_Emulator_X) was a popul
 
 Hundreds of E-MU sound banks are available for free on Archive.org, for instance:
 - [E-mu EXB Sound Banks Collection](https://archive.org/details/emuexbsoundbanks)
+- [90's sample CDs](https://archive.org/download/nnty.fun-90ssamplecds/converts/)
 
 These collections contain thousands of od school samples that can be converted with this tool.
 
