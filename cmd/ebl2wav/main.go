@@ -73,7 +73,7 @@ func main() {
 
 	// Set default output path if not provided
 	if outputPath == "" {
-		outputPath = "EM-U Sounds"
+		outputPath = "E-MU Sounds"
 		fmt.Printf("No output directory selected - Defaulting to %s\n", outputPath)
 	}
 
@@ -230,12 +230,12 @@ func processExbFile(exbPath string) {
 		if exbDirPath != "" {
 			relPath, err := filepath.Rel(exbDirPath, exbDir)
 			if err == nil && relPath != "." {
-				thisOutputPath = filepath.Join("EM-U Sounds", relPath, baseExbName)
+				thisOutputPath = filepath.Join("E-MU Sounds", relPath, baseExbName)
 			} else {
-				thisOutputPath = filepath.Join("EM-U Sounds", baseExbName)
+				thisOutputPath = filepath.Join("E-MU Sounds", baseExbName)
 			}
 		} else {
-			thisOutputPath = filepath.Join("EM-U Sounds", baseExbName)
+			thisOutputPath = filepath.Join("E-MU Sounds", baseExbName)
 		}
 		fmt.Printf("No output directory selected - Defaulting to %s\n", thisOutputPath)
 	}
