@@ -236,17 +236,19 @@ func (p *Parser) ReadFile(inputFile string, errorDir string) (*EBLFile, error) {
 			p.Debug(fmt.Sprintf("Padding data (first 16 bytes if available):\n%s", p.dumpHex(padding, 16)))
 		}
 
-		// Check if the padding already contains the Header 4 prefix
-		if bytesRead >= 4 && string(padding[:4]) == "E5S1" {
+		// Check if the padding contains the Header 4 prefix anywhere
+		paddingStr := string(padding)
+		header4PrefixPos := strings.Index(paddingStr, "E5S1")
+		if header4PrefixPos >= 0 {
 			if p.debug {
-				p.Debug("Found Header 4 prefix (E5S1) in the padding bytes")
+				p.Debug(fmt.Sprintf("Found Header 4 prefix (E5S1) in the padding bytes at position %d", header4PrefixPos))
 			}
 			foundHeader4InPadding = true
-			header4PrefixFromPadding = padding[:4]
+			header4PrefixFromPadding = []byte("E5S1") // Use the actual E5S1 string
 
-			// If we have enough bytes, also grab the size field
-			if bytesRead >= 8 {
-				header4SizeBytes = padding[4:8]
+			// If we have enough bytes after the prefix, also grab the size field
+			if header4PrefixPos+8 <= bytesRead {
+				header4SizeBytes = padding[header4PrefixPos+4 : header4PrefixPos+8]
 				if p.debug {
 					p.Debug(fmt.Sprintf("Also found Header 4 size bytes in padding: %x", header4SizeBytes))
 				}
