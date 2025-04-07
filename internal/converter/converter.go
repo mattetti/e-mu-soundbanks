@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattetti/em-u-soundbanks/internal/ebl"
-	"github.com/mattetti/em-u-soundbanks/internal/wav"
+	"github.com/mattetti/e-mu-soundbanks/internal/ebl"
+	"github.com/mattetti/e-mu-soundbanks/internal/wav"
 )
 
 // Options represents the conversion options

@@ -1,6 +1,6 @@
-# EM-U SoundBanks
+# E-MU SoundBanks
 
-Tools for recovering and using legacy E-mu sound samples and banks. This repository provides utilities to help musicians and producers access vintage EM-U sample libraries that might otherwise be inaccessible due to outdated file formats.
+Tools for recovering and using legacy E-mu sound samples and banks. This repository provides utilities to help musicians and producers access vintage E-MU sample libraries that might otherwise be inaccessible due to outdated file formats.
 
 ## EBL to WAV Converter
 
@@ -10,7 +10,7 @@ The [E-mu Emulator X](https://en.wikipedia.org/wiki/E-mu_Emulator_X) was a popul
 
 ### Finding Sample Libraries
 
-Hundreds of EM-U sound banks are available for free on Archive.org, for instance:
+Hundreds of E-MU sound banks are available for free on Archive.org, for instance:
 - [E-mu EXB Sound Banks Collection](https://archive.org/details/emuexbsoundbanks)
 
 These collections contain thousands of od school samples that can be converted with this tool.
@@ -21,8 +21,8 @@ These collections contain thousands of od school samples that can be converted w
 
 ```bash
 # Clone the repository
-git clone https://github.com/mattetti/em-u-soundbanks.git
-cd em-u-soundbanks
+git clone https://github.com/mattetti/e-mu-soundbanks.git
+cd e-MU-soundbanks
 
 # Build the binary
 go build ./cmd/ebl2wav
@@ -37,7 +37,7 @@ The tool supports both individual file conversion and batch processing:
 
 ### Examples
 
-Convert every `.ebl` file in `/path/to/input/` recursively. Outputs to `./EM-U Sounds/`:
+Convert every `.ebl` file in `/path/to/input/` recursively. Outputs to `./E-MU Sounds/`:
 
 ```bash
 ebl2wav -i /path/to/input/
@@ -64,7 +64,7 @@ ebl2wav -i /path/to/input/ -d -e
 ### Command Line Options
 
 - `-i`: Input file or directory. Required unless `-exb` is used.
-- `-o`: Output Directory. Resultant output directory. Defaults to `./EM-U Sounds/`.
+- `-o`: Output Directory. Resultant output directory. Defaults to `./E-MU Sounds/`.
 - `-exb`: Path to an .exb file. Will process related .ebl files in the SamplePool folder.
 - `-d`: Debug - Prints debug messages, mostly EBL file read warnings.
 - `-e`: Error Save. Writes files which can't be read to /output/errors/.

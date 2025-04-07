@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mattetti/em-u-soundbanks/internal/ebl"
+	"github.com/mattetti/e-mu-soundbanks/internal/ebl"
 )
 
 // Encoder handles encoding EBL audio data to WAV format
